@@ -1,0 +1,13 @@
+- name: Provision with Ansible
+  hosts: all
+  become: yes
+
+  vars:
+   root_pass: Epam_2011
+    
+  roles:
+  - ldap 
+  - phpldap
+
+  post_tasks:
+  - debug: var=services_info.split('\n')
