@@ -1,0 +1,43 @@
+---
+# tasks file for zabbix
+- debug: msg="Will install ldap-server & configure it"
+
+- name: ldap install
+  yum: name={{item}} state=latest
+  with_items:
+   - openldap-servers
+   - openldap-clientszabbix
+
+- name: copy file   
+  file: src=/usr/share/openldap-servers/DB_CONFIG.example dest=/var/lib/ldap/DB_CONFIG"
+
+- name: change owner
+  file: dest=/var/lib/ldap owner=ldap group=ldap recurse=yes
+
+- name: copy the slap.d directory
+  file: src=/etc/openldap/slapd.d dest=/etc/openldap/slapd.d.original
+
+- name: remove the slap.d directory
+  file: path=/etc/openldap/slapd.d state=absent
+
+- name: create file slapd.conf 
+  copy: src=slapd.conf dest=/etc/openldap/slapd.conf
+
+- name: change owner
+  file: dest=/var/lib/ldap owner=ldap group=ldap recurse=yes
+
+- name: start service slapd
+  service: name=slapd state=started enabled=yes
+
+- name: create Initial data
+  copy: src=ldap-init.ldif dest=/etc/openldap/ldap-init.ldif
+
+- name: add Initial data
+  command: ldapadd -x -D "cn=admin,dc=mnt,dc=lab" -w "{{ root_pass }}" -f /etc/openldap/ldap-init.ldif
+
+- name: create user
+  copy: src=ldap-avkachan.ldif dest=/etc/openldap/ldap-avkachan.ldif
+
+- name: add user
+  command: ldapadd -x -D "cn=admin,dc=mnt,dc=lab" -w "{{ root_pass }}" -f /etc/openldap/ldap-avkachan.ldif
+
